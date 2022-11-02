@@ -20,5 +20,9 @@ from core.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('directors/', DirectorView.as_view(), name='directors'),
-    path('directors/<int:director_id>', DirectorView.as_view(), name='directors'),
+    path('directors/<int:director_id>', DirectorView.as_view(), name='director'),
+    path('categories/', CategoryView.as_view(), name='categories'),
+    path('categories/<str:category_id>', CategoryView.as_view(), name='category'),
+    path('movies/', MovieView.as_view(), name='movies'),
+    path('movies/<str:movie_id>', MovieView.as_view(), name='movie'),
 ]
