@@ -25,4 +25,5 @@ urlpatterns = [
     path('categories/<str:category_id>', CategoryView.as_view(), name='category'),
     path('movies/', MovieView.as_view(), name='movies'),
     path('movies/<str:movie_id>', MovieView.as_view(), name='movie'),
+    path('orm/', MovieViewWithOrm.as_view(), name='orm_test'),
 ]

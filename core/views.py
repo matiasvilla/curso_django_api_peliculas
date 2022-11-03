@@ -6,12 +6,13 @@ import json
 from core.models import *
 from datetime import datetime
 
+
 # Create your views here.
 class DirectorView(APIView):
     def get(self, request, director_id=None):
         if director_id:
             if Director.objects.filter(pk=director_id).exists():
-                director_response = Director.objects.filter(pk=director_id)     # QuerySet
+                director_response = Director.objects.filter(pk=director_id)  # QuerySet
             else:
                 return HttpResponse(content_type='application/json',
                                     content=json.dumps({'detail': 'Director not found'}),
@@ -80,9 +81,9 @@ class CategoryView(APIView):
 
     def post(self, request):
         body = json.loads(request.body)
-        director, created = Category.objects.get_or_create(**body)
+        category, created = Category.objects.get_or_create(**body)
         if created:
-            director.save()
+            category.save()
             return HttpResponse(content_type='application/json',
                                 content=json.dumps({'detail': 'Category created successfully',
                                                     'data': body}),
@@ -98,7 +99,7 @@ class CategoryView(APIView):
                                 content=json.dumps({'detail': 'Category not found'}),
                                 status=HTTP_404_NOT_FOUND)
         body = json.loads(request.body)
-        body['last_update'] = datetime.datetime.now()
+        body['last_update'] = datetime.now()
         category.update(**body)
         return HttpResponse(content_type='application/json',
                             content=json.dumps({'detail': 'Category updated successfully'}),
@@ -128,8 +129,9 @@ class MovieView(APIView):
                                     status=HTTP_404_NOT_FOUND)
         else:
             movie_response = list(Movie.objects.all())
+        movie_response = serialize('json', movie_response)
         return HttpResponse(content_type='application/json',
-                            content=json.dumps(movie_response),
+                            content=movie_response,
                             status=HTTP_200_OK)
 
     def post(self, request):
@@ -153,7 +155,7 @@ class MovieView(APIView):
                                 content=json.dumps({'detail': 'Movie not found'}),
                                 status=HTTP_404_NOT_FOUND)
         body = json.loads(request.body)
-        body['last_update'] = datetime.datetime.now()
+        body['last_update'] = datetime.now()
         movie.update(**body)
         return HttpResponse(content_type='application/json',
                             content=json.dumps({'detail': 'Movie updated successfully'}),
@@ -168,4 +170,38 @@ class MovieView(APIView):
         movie.delete()
         return HttpResponse(content_type='application/json',
                             content=json.dumps({'detail': 'Movie deleted successfully'}),
+                            status=HTTP_200_OK)
+
+
+class MovieViewWithOrm(APIView):
+
+    def get(self, request):
+        # Obtener registros cuyo nombre sea exactamente Batman
+        queryset_exact_field = list(Movie.objects.filter(name__exact="Batman").values("name",
+                                                                                      "synopsis",
+                                                                                      "director",
+                                                                                      "category"))
+        # Obtener registros cuyo nombre sea Batman sin tener en cuenta si es mayúscula o minúscula
+        queryset_iexact_field = list(Movie.objects.filter(name__iexact="batman").values("name",
+                                                                                        "synopsis",
+                                                                                        "director",
+                                                                                        "category"))
+
+        queryset_icontains_field = list(Movie.objects.filter(name__icontains="batman").values("name",
+                                                                                              "synopsis",
+                                                                                              "director",
+                                                                                              "category"))
+
+        queryset_foreignkey_field = list(Movie.objects.filter(category__name="Terror").values("name",
+                                                                                              "category__name",
+                                                                                              "director__last_name"))
+
+        response = {
+            'exact_field': queryset_exact_field,
+            'iexact_field': queryset_iexact_field,
+            'icontains_field': queryset_icontains_field,
+            'foreignkey_field': queryset_foreignkey_field
+        }
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps(response),
                             status=HTTP_200_OK)
