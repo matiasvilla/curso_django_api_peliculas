@@ -5,6 +5,7 @@ from django.core.serializers import serialize
 import json
 from core.models import *
 from datetime import datetime
+from django.db import IntegrityError
 
 
 # Create your views here.
@@ -170,6 +171,120 @@ class MovieView(APIView):
         movie.delete()
         return HttpResponse(content_type='application/json',
                             content=json.dumps({'detail': 'Movie deleted successfully'}),
+                            status=HTTP_200_OK)
+
+
+class ActorView(APIView):
+    def get(self, request, actor_id=None):
+        if actor_id:
+            if Actor.objects.filter(pk=actor_id).exists():
+                actor_response = Actor.objects.filter(pk=actor_id)  # QuerySet
+            else:
+                return HttpResponse(content_type='application/json',
+                                    content=json.dumps({'detail': 'Actor not found'}),
+                                    status=HTTP_404_NOT_FOUND)
+        else:
+            actor_response = Actor.objects.all()
+        actor_response = serialize('json', actor_response)
+        return HttpResponse(content_type='application/json',
+                            content=actor_response,
+                            status=HTTP_200_OK)
+
+    def post(self, request):
+        body = json.loads(request.body)
+        actor, created = Actor.objects.get_or_create(**body)  # (actor, created)
+        if created:
+            actor.save()
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Actor created successfully',
+                                                    'data': body}),
+                                status=HTTP_201_CREATED)
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps({'detail': 'Actor already exists'}),
+                            status=HTTP_409_CONFLICT)
+
+    def put(self, request, actor_id):
+        actor = Actor.objects.filter(pk=actor_id)
+        if not actor.exists():
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Actor not found'}),
+                                status=HTTP_404_NOT_FOUND)
+        body = json.loads(request.body)
+        body['last_update'] = datetime.now()
+        actor.update(**body)
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps({'detail': 'Actor updated successfully'}),
+                            status=HTTP_200_OK)
+
+    def delete(self, request, actor_id):
+        actor = Actor.objects.filter(pk=actor_id)
+        if not actor.exists():
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Actor not found'}),
+                                status=HTTP_404_NOT_FOUND)
+        actor.delete()
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps({'detail': 'Actor deleted successfully'}),
+                            status=HTTP_200_OK)
+
+
+class CastView(APIView):
+    def get(self, request, cast_id=None):
+        if cast_id:
+            if Cast.objects.filter(pk=cast_id).exists():
+                cast_response = Cast.objects.filter(pk=cast_id)  # QuerySet
+            else:
+                return HttpResponse(content_type='application/json',
+                                    content=json.dumps({'detail': 'Cast not found'}),
+                                    status=HTTP_404_NOT_FOUND)
+        else:
+            cast_response = Cast.objects.all()
+        cast_response = serialize('json', cast_response)
+        return HttpResponse(content_type='application/json',
+                            content=cast_response,
+                            status=HTTP_200_OK)
+
+    def post(self, request):
+        body = json.loads(request.body)
+        try:
+            cast, created = Cast.objects.get_or_create(**body)
+            print('1111111111111111111111111111111111111111111')
+        except IntegrityError:
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Wrong actor_id/movie_id'}),
+                                status=HTTP_400_BAD_REQUEST)
+        if created:
+            cast.save()
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Cast created successfully',
+                                                    'data': body}),
+                                status=HTTP_201_CREATED)
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps({'detail': 'Cast already exists'}),
+                            status=HTTP_409_CONFLICT)
+
+    def put(self, request, cast_id):
+        cast = Cast.objects.filter(pk=cast_id)
+        if not cast.exists():
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Cast not found'}),
+                                status=HTTP_404_NOT_FOUND)
+        body = json.loads(request.body)
+        body['last_update'] = datetime.now()
+        cast.update(**body)
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps({'detail': 'Cast updated successfully'}),
+                            status=HTTP_200_OK)
+
+    def delete(self, request, cast_id):
+        cast = Cast.objects.filter(pk=cast_id)
+        if not cast.exists():
+            return HttpResponse(content_type='application/json',
+                                content=json.dumps({'detail': 'Cast not found'}),
+                                status=HTTP_404_NOT_FOUND)
+        cast.delete()
+        return HttpResponse(content_type='application/json',
+                            content=json.dumps({'detail': 'Cast deleted successfully'}),
                             status=HTTP_200_OK)
 
 
