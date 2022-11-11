@@ -302,11 +302,13 @@ class MovieViewWithOrm(APIView):
                                                                                         "director",
                                                                                         "category"))
 
+        # Trae todas las peliculas en las que en el nombre tenga la palabra "batman"
         queryset_icontains_field = list(Movie.objects.filter(name__icontains="batman").values("name",
                                                                                               "synopsis",
                                                                                               "director",
                                                                                               "category"))
 
+        # Trae todas las películas en las que el nombre de la categoría sea "Terror"
         queryset_foreignkey_field = list(Movie.objects.filter(category__name="Terror").values("name",
                                                                                               "category__name",
                                                                                               "director__last_name"))
